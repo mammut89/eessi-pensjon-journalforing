@@ -73,31 +73,49 @@ class SedDokumentHelper(private val fagmodulKlient: FagmodulKlient,
                 .textValue()
     }
 
-    fun hentPensjonSakFraSED(aktoerId: String, alleSedIBuc: Map<String, String?>): SakInformasjon? {
-        val list = hentSakIdFraSED(alleSedIBuc)
-        return if (list.isNotEmpty()) {
-            validerSakIdFraSEDogReturnerPensjonSak(aktoerId, list)
+    fun hentPensjonSakFraSED(aktoerId: String, alleSedIBuc: Map<String, String?>, sedType: SedType?, bucType: BucType): SakInformasjon? {
+        logger.debug("aktoerid: $aktoerId, sedType: ${sedType?.name} og bucType: ${bucType?.name}")
+        val map = hentSakIdFraSED(alleSedIBuc)
+
+        logger.debug(map.toJson())
+
+        if (map.isNotEmpty()) {
+            if (bucType == BucType.P_BUC_05) {
+                val sedSakP8000 = map.getOrDefault("P8000", "")
+                val currentSedsak = map.getOrDefault(sedType?.name, "")
+                logger.info("P_BUC_05 Prøver å hente inn saknr fra SED P8000: $sedSakP8000 og ${sedType?.name}: $currentSedsak")
+                if (sedSakP8000 == currentSedsak) {
+                    val result = validerSakIdFraSEDogReturnerPensjonSak(aktoerId, listOf(sedSakP8000))
+                    logger.debug("Følgende sakInformasjon funet: ${result?.toJson()}")
+                    return result
+                }
+                logger.warn("saknr ikke likt som P8000 ingen saknr funnet fra P_BUC_05")
+                return null
+            } else {
+                return validerSakIdFraSEDogReturnerPensjonSak(aktoerId, map.values.toList())
+            }
         } else {
-            null
+            return null
         }
     }
 
-    private fun hentSakIdFraSED(alleSedIBuc: Map<String, String?>): List<String> {
-        val list = mutableListOf<String>()
+    private fun hentSakIdFraSED(alleSedIBuc: Map<String, String?>): Map<String, String> {
+        //val list = mutableListOf<String>()
+        val map = mutableMapOf<String, String>()
 
         alleSedIBuc.forEach { (_, sed) ->
             val sedRootNode = mapper.readTree(sed)
+            val sedType = sedRootNode.get("sed").textValue()
             val eessi = filterEESSIsak(sedRootNode.get("nav"))
             logger.debug("eessi saknummer: $eessi")
             val sakid = eessi?.let { trimSakidString(it) }
             logger.debug("trimmet saknummer: $sakid")
             if (sakid != null && sakid.isNotBlank()) {
-                list.add(sakid)
+                map.put(sedType, sakid)
                 logger.debug("legger sakid til liste...")
             }
         }
-
-        return list.distinct()
+        return map
     }
 
     private fun filterEESSIsak(navNode: JsonNode): String? {

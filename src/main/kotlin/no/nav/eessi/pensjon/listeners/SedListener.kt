@@ -161,7 +161,7 @@ class SedListener(
 
         val sakInformasjonFraSED = if (gyldigeFunksjoner.togglePensjonSak()) {
             logger.debug("skal hente pensjonSak for sed kap.1 og validere mot pesys")
-            if (sakInformasjonFraBestemSak == null) sedDokumentHelper.hentPensjonSakFraSED(aktoerId, alleSedIBuc)
+            if (sakInformasjonFraBestemSak == null) sedDokumentHelper.hentPensjonSakFraSED(aktoerId, alleSedIBuc, sedHendelseModel.sedType, sedHendelseModel.bucType)
             else null
         } else null
 

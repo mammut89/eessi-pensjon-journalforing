@@ -108,8 +108,7 @@ class SedDokumentHelperTest {
         val sedP2100 = String(Files.readAllBytes(Paths.get("src/test/resources/sed/P2100-utenNorskGjenlevende-NAV.json")))
         val mockAllSediBuc = mapOf("P2000" to sedP2100, "P5000" to sedP5000)
 
-        val result = helper.hentPensjonSakFraSED("123123", mockAllSediBuc)
-
+        val result = helper.hentPensjonSakFraSED("123123", mockAllSediBuc, SedType.P2000, BucType.P_BUC_01)
         assertNotNull(result)
         assertEquals(expected.toJson(), result?.toJson())
 
@@ -121,7 +120,7 @@ class SedDokumentHelperTest {
         val sedP2000 = String(Files.readAllBytes(Paths.get("src/test/resources/sed/P2000-ugyldigFNR-NAV.json")))
         val mockAlleSedIBuc = mapOf("P2000" to sedP2000)
 
-        val result = helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc)
+        val result = helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc, SedType.P2000, BucType.P_BUC_01)
 
        assertNull(result)
 
@@ -143,7 +142,7 @@ class SedDokumentHelperTest {
             }
         """.trimIndent()
         val mockAlleSedIBuc = mapOf("P2000" to sedP2000)
-        val result = helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc)
+        val result = helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc, SedType.P2000, BucType.P_BUC_01)
         assertNull(result)
     }
 
@@ -167,8 +166,40 @@ class SedDokumentHelperTest {
 
         val mockAlleSedIBuc = mapOf("P2000" to sedP2000)
         assertThrows<RuntimeException>{
-            helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc)
+            helper.hentPensjonSakFraSED("123123", mockAlleSedIBuc, SedType.P2000, BucType.P_BUC_01)
         }
+    }
+
+
+    @Test
+    fun `test henselde on P_BUC_05 sed same sakid on sed as P8000 expected return valid sak`() {
+        val sedP2000 = """
+            {
+              "nav": {
+                "eessisak" : [ {
+                  "land" : "NO",
+                  "saksnummer" : "22874955"
+                } ]
+               },
+              "sed": "P8000",
+              "sedGVer": "4",
+              "sedVer": "1"
+            }
+        """.trimIndent()
+
+        val sedP5000 = """
+            {
+              "nav": {
+                "eessisak" : [ {
+                  "land" : "NO",
+                  "saksnummer" : "22874900"
+                } ]
+               },
+              "sed": "P5000",
+              "sedGVer": "4",
+              "sedVer": "1"
+            }
+        """.trimIndent()
     }
 
     @Test
@@ -211,7 +242,7 @@ class SedDokumentHelperTest {
 
         val mockAllSediBuc = mapOf("P2000" to sedP2000, "P4000" to sedP2000, "P5000" to sedP5000, "P6000" to sedP2000)
 
-        val result = helper.hentPensjonSakFraSED("123123", mockAllSediBuc)
+        val result = helper.hentPensjonSakFraSED("123123", mockAllSediBuc, SedType.P2000, BucType.P_BUC_01)
 
         assertNotNull(result)
         assertEquals(YtelseType.ALDER, result?.sakType)
