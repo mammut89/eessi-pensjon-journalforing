@@ -46,6 +46,8 @@ configurations {
 
 dependencies {
 
+        implementation("com.amazonaws:codeguru-profiler-java-agent:1.1.0")
+
 	// Spring-boot
 	implementation("org.springframework.boot:spring-boot-starter-aop")
 
